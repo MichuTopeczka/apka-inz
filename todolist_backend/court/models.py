@@ -274,7 +274,8 @@ class Message(models.Model):
         null=True, 
         blank=True
     )
-    content = models.TextField()
+    content = models.TextField(blank=True, default="") # Zmieniono na blank=True, aby można było wysłać sam plik
+    attachment = models.FileField(upload_to='chat_attachments/%Y/%m/%d/', null=True, blank=True) # Nowe pole dla załączników
     is_read = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)

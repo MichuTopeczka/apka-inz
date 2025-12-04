@@ -159,32 +159,33 @@ class AuditLogSerializer(serializers.ModelSerializer):
 #Chatroom serializer
 class MessageSerializer(serializers.ModelSerializer):
     sender_username = serializers.CharField(source='sender.username', read_only=True)
-    sender_id = serializers.IntegerField(source='sender.id', read_only=True)  # ✅ IntegerField zamiast CharField
+    sender_id = serializers.IntegerField(source='sender.id', read_only=True)
     recipient_username = serializers.CharField(source='recipient.username', read_only=True, allow_null=True)
+    attachment_url = serializers.SerializerMethodField() # Dodane pole URL dla załącznika
     
     class Meta:
         model = Message
         fields = [
             'id', 
             'sender', 
-            'sender_id',  # Teraz będzie number, nie string
+            'sender_id', 
             'sender_username', 
             'recipient', 
             'recipient_username',
             'content', 
+            'attachment',      # <-- Dodane pole do przesyłania
+            'attachment_url',  # <-- Dodane pole do odczytu
             'created_at', 
             'is_read',
             'room'
         ]
-        read_only_fields = ['created_at', 'sender', 'sender_id', 'sender_username', 'recipient_username']
+        read_only_fields = ['created_at', 'sender', 'sender_id', 'sender_username', 'recipient_username', 'attachment_url']
 
-class ChatRoomSerializer(serializers.ModelSerializer):
-    messages = MessageSerializer(many=True, read_only=True)
-    
-    class Meta:
-        model = ChatRoom
-        fields = ['id', 'name', 'created_at', 'messages']
-
+    def get_attachment_url(self, obj):
+        request = self.context.get('request')
+        if obj.attachment and request:
+            return request.build_absolute_uri(obj.attachment.url)
+        return None
 
 class ChatRoomSerializer(serializers.ModelSerializer):
     messages = MessageSerializer(many=True, read_only=True)
